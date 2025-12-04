@@ -4,12 +4,12 @@ import com.comp2042.model.*;
 
 public class GameController implements InputEventListener {
 
-    private Board board = new SimpleBoard(25, 10);
+    private final Board board = new SimpleBoard(25, 10);
 
     private final GuiController viewGuiController;
 
-    public GameController(GuiController c) {
-        viewGuiController = c;
+    public GameController(GuiController guiController) {
+        viewGuiController = guiController;
         board.createNewBrick();
         viewGuiController.setEventListener(this);
         viewGuiController.initGameView(board.getBoardMatrix(), board.getViewData());
