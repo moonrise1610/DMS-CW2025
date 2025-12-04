@@ -24,8 +24,8 @@ public class Main extends Application {
         //'c' to 'guiController'
         GuiController guiController = fxmlLoader.getController();
 
-        primaryStage.setTitle("TetrisJFX");
-        Scene scene = new Scene(rootNode, 300, 510);
+        primaryStage.setTitle("MoonTetris"); //updated title
+        Scene scene = new Scene(rootNode, 600, 700); //updated window size
         primaryStage.setScene(scene);
         primaryStage.show();
         new GameController(guiController);

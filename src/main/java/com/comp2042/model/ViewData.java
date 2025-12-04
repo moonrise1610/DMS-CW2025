@@ -1,11 +1,11 @@
 package com.comp2042.model;
 
 public final class ViewData {
-
-    private final int[][] brickData;
-    private final int xPosition;
-    private final int yPosition;
-    private final int[][] nextBrickData;
+//made public
+    public final int[][] brickData;
+    public final int xPosition;
+    public final int yPosition;
+    public final int[][] nextBrickData;
 
     public ViewData(int[][] brickData, int xPosition, int yPosition, int[][] nextBrickData) {
         this.brickData = brickData;

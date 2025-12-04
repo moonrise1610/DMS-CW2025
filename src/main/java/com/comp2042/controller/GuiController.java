@@ -23,6 +23,8 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
+import javafx.scene.layout.VBox;
+import javafx.scene.layout.Pane;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -43,6 +45,12 @@ public class GuiController implements Initializable {
     @FXML
     private GameOverPanel gameOverPanel;
 
+    //menu
+    @FXML private VBox mainMenu;
+    @FXML private Pane gameRoot;
+
+    private boolean isWhooshMode = false;
+
     private Rectangle[][] displayMatrix;
 
     private InputEventListener eventListener;
@@ -60,24 +68,43 @@ public class GuiController implements Initializable {
         Font.loadFont(getClass().getClassLoader().getResource("digital.ttf").toExternalForm(), 38);
         gamePanel.setFocusTraversable(true);
         gamePanel.requestFocus();
+        //controls
         gamePanel.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
                 if (isPause.getValue() == Boolean.FALSE && isGameOver.getValue() == Boolean.FALSE) {
-                    if (keyEvent.getCode() == KeyCode.LEFT || keyEvent.getCode() == KeyCode.A) {
+                    //left
+                    if (keyEvent.getCode() == KeyCode.LEFT) {
                         refreshBrick(eventListener.onLeftEvent(new MoveEvent(EventType.LEFT, EventSource.USER)));
                         keyEvent.consume();
                     }
-                    if (keyEvent.getCode() == KeyCode.RIGHT || keyEvent.getCode() == KeyCode.D) {
+                    //right
+                    if (keyEvent.getCode() == KeyCode.RIGHT) {
                         refreshBrick(eventListener.onRightEvent(new MoveEvent(EventType.RIGHT, EventSource.USER)));
                         keyEvent.consume();
                     }
-                    if (keyEvent.getCode() == KeyCode.UP || keyEvent.getCode() == KeyCode.W) {
+                    //rotate (arrow up)
+                    if (keyEvent.getCode() == KeyCode.UP) {
                         refreshBrick(eventListener.onRotateEvent(new MoveEvent(EventType.ROTATE, EventSource.USER)));
                         keyEvent.consume();
                     }
-                    if (keyEvent.getCode() == KeyCode.DOWN || keyEvent.getCode() == KeyCode.S) {
+                    //soft drop (arrow down)
+                    if (keyEvent.getCode() == KeyCode.DOWN) {
                         moveDown(new MoveEvent(EventType.DOWN, EventSource.USER));
+                        keyEvent.consume();
+                    }
+                    //hard drop (space)
+                    if (keyEvent.getCode() == KeyCode.SPACE) {
+                        DownData data;
+                        do {
+                            data = eventListener.onDownEvent(new MoveEvent(EventType.DOWN, EventSource.USER));
+                            refreshBrick(data.getViewData());
+                        } while (data.getClearRow() == null && data.getViewData().getBrickData() != null);
+                        keyEvent.consume();
+                    }
+                    //hold (C)
+                    if (keyEvent.getCode() == KeyCode.C) {
+                        System.out.println("Hold feature pending implementation");
                         keyEvent.consume();
                     }
                 }
@@ -86,12 +113,30 @@ public class GuiController implements Initializable {
                 }
             }
         });
+
         gameOverPanel.setVisible(false);
 
         final Reflection reflection = new Reflection();
         reflection.setFraction(0.8);
         reflection.setTopOpacity(0.9);
         reflection.setTopOffset(-12);
+    }
+
+    //menu actions
+    public void startLucidGame(ActionEvent event) {
+        isWhooshMode = false;
+        mainMenu.setVisible(false);
+        gameRoot.setVisible(true);
+        gamePanel.requestFocus();
+        newGame(null);
+    }
+
+    public void startWhooshGame(ActionEvent event) {
+        isWhooshMode = true;
+        mainMenu.setVisible(false);
+        gameRoot.setVisible(true);
+        gamePanel.requestFocus();
+        newGame(null);
     }
 
     public void initGameView(int[][] boardMatrix, ViewData brick) {
@@ -104,7 +149,6 @@ public class GuiController implements Initializable {
                 gamePanel.add(rectangle, j, i - 2);
             }
         }
-
         rectangles = new Rectangle[brick.getBrickData().length][brick.getBrickData()[0].length];
         for (int i = 0; i < brick.getBrickData().length; i++) {
             for (int j = 0; j < brick.getBrickData()[i].length; j++) {
@@ -116,7 +160,6 @@ public class GuiController implements Initializable {
         }
         brickPanel.setLayoutX(gamePanel.getLayoutX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
         brickPanel.setLayoutY(-42 + gamePanel.getLayoutY() + brick.getyPosition() * brickPanel.getHgap() + brick.getyPosition() * BRICK_SIZE);
-
 
         timeLine = new Timeline(new KeyFrame(
                 Duration.millis(400),

@@ -1,8 +1,9 @@
 package com.comp2042.model;
 
 public final class DownData {
-    private final ClearRow clearRow;
-    private final ViewData viewData;
+    //made public
+    public final ClearRow clearRow;
+    public final ViewData viewData;
 
     public DownData(ClearRow clearRow, ViewData viewData) {
         this.clearRow = clearRow;
