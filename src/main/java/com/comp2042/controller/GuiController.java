@@ -14,7 +14,6 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
-import javafx.scene.effect.Reflection;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
@@ -25,13 +24,17 @@ import javafx.scene.text.Font;
 import javafx.util.Duration;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class GuiController implements Initializable {
 
-    private static final int BRICK_SIZE = 20;
+    //increased size to fix half board game over panel
+    private static final int BRICK_SIZE = 30;
 
     @FXML
     private GridPane gamePanel;
@@ -47,7 +50,10 @@ public class GuiController implements Initializable {
 
     //menu
     @FXML private VBox mainMenu;
-    @FXML private Pane gameRoot;
+    @FXML private HBox gameRoot;
+    @FXML private Text modeTitle;
+    @FXML private Label timeLabel;
+    @FXML private Label linesLabel;
 
     private boolean isWhooshMode = false;
 
@@ -63,9 +69,17 @@ public class GuiController implements Initializable {
 
     private final BooleanProperty isGameOver = new SimpleBooleanProperty();
 
+    //game mode setting
+    private int secondsElapsed = 0;
+    private int linesCleared = 0;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        Font.loadFont(getClass().getClassLoader().getResource("digital.ttf").toExternalForm(), 38);
+        URL fontUrl = getClass().getClassLoader().getResource("digital.ttf");
+        if (fontUrl != null){
+            Font.loadFont(fontUrl.toExternalForm(), 38);
+        }
+
         gamePanel.setFocusTraversable(true);
         gamePanel.requestFocus();
         //controls
@@ -115,30 +129,40 @@ public class GuiController implements Initializable {
         });
 
         gameOverPanel.setVisible(false);
-
-        final Reflection reflection = new Reflection();
-        reflection.setFraction(0.8);
-        reflection.setTopOpacity(0.9);
-        reflection.setTopOffset(-12);
     }
 
     //menu actions
-    public void startLucidGame(ActionEvent event) {
-        isWhooshMode = false;
+    public void startLucidGame(ActionEvent event){
+        setupGame(false, "LUCID");
+    }
+
+    public void startWhooshGame(ActionEvent event){
+        setupGame(true, "WHOOSH!");
+    }
+
+    public void backToMenu(ActionEvent event){
+        if (timeLine != null) timeLine.stop();
+        gameRoot.setVisible(false);
+        mainMenu.setVisible(true);
+    }
+
+    private void setupGame(boolean isWhoosh, String title) {
+        isWhooshMode = isWhoosh;
+        modeTitle.setText(title);
+
+        //whoosh 120 secs
+        //lucid 0 secs
+        secondsElapsed = isWhooshMode ? 120 : 0;
+        linesCleared = 0;
+        updateStatsUI();
+
         mainMenu.setVisible(false);
         gameRoot.setVisible(true);
         gamePanel.requestFocus();
         newGame(null);
     }
 
-    public void startWhooshGame(ActionEvent event) {
-        isWhooshMode = true;
-        mainMenu.setVisible(false);
-        gameRoot.setVisible(true);
-        gamePanel.requestFocus();
-        newGame(null);
-    }
-
+    //game loop and logic
     public void initGameView(int[][] boardMatrix, ViewData brick) {
         displayMatrix = new Rectangle[boardMatrix.length][boardMatrix[0].length];
         for (int i = 2; i < boardMatrix.length; i++) {
@@ -158,18 +182,47 @@ public class GuiController implements Initializable {
                 brickPanel.add(rectangle, j, i);
             }
         }
-        brickPanel.setLayoutX(gamePanel.getLayoutX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
-        brickPanel.setLayoutY(-42 + gamePanel.getLayoutY() + brick.getyPosition() * brickPanel.getHgap() + brick.getyPosition() * BRICK_SIZE);
+        brickPanel.setLayoutX(0);
+        brickPanel.setLayoutY(0);
 
+        if (timeLine != null) timeLine.stop();
+
+        //gravity + timer
         timeLine = new Timeline(new KeyFrame(
-                Duration.millis(400),
-                ae -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))
+                Duration.millis(500),
+                ae -> {
+                    moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD));
+
+                    //clock logic
+                    if (isWhooshMode) {
+                        secondsElapsed--; //whoosh (countdown)
+                        if (secondsElapsed <= 0) {
+                            gameOver();
+                        }
+                    } else {
+                        secondsElapsed++; //lucid (stopwatch)
+                    }
+                    updateStatsUI();
+                }
         ));
         timeLine.setCycleCount(Timeline.INDEFINITE);
         timeLine.play();
     }
+        private void updateStatsUI() {
 
-    private Paint getFillColor(int i) {
+            //format time
+            int min = Math.abs(secondsElapsed) / 60;
+            int sec = Math.abs(secondsElapsed) % 60;
+            timeLabel.setText(String.format("Time: %02d:%02d", min, sec));
+
+            //format lines
+            if (isWhooshMode) {
+                linesLabel.setText("Lines: " + linesCleared + " / 50");
+            } else {
+                linesLabel.setText("Lines: " + linesCleared);
+            }
+        }
+        private Paint getFillColor(int i) {
         Paint returnPaint;
         switch (i) {
             case 0:
@@ -234,6 +287,10 @@ public class GuiController implements Initializable {
         if (isPause.getValue() == Boolean.FALSE) {
             DownData downData = eventListener.onDownEvent(event);
             if (downData.getClearRow() != null && downData.getClearRow().getLinesRemoved() > 0) {
+                //lines cleared (updated)
+                linesCleared += downData.getClearRow().getLinesRemoved();
+                updateStatsUI();
+
                 NotificationPanel notificationPanel = new NotificationPanel("+" + downData.getClearRow().getScoreBonus());
                 groupNotification.getChildren().add(notificationPanel);
                 notificationPanel.showScore(groupNotification.getChildren());
@@ -247,26 +304,25 @@ public class GuiController implements Initializable {
         this.eventListener = eventListener;
     }
 
-    public void bindScore(IntegerProperty integerProperty) {
-    }
+    public void bindScore(IntegerProperty integerProperty) {}
 
-    public void gameOver() {
-        timeLine.stop();
-        gameOverPanel.setVisible(true);
-        isGameOver.setValue(Boolean.TRUE);
-    }
+        public void gameOver() {
+            if (timeLine != null) timeLine.stop();
+            gameOverPanel.setVisible(true);
+            isGameOver.setValue(Boolean.TRUE);
+        }
 
     public void newGame(ActionEvent actionEvent) {
-        timeLine.stop();
+        if (timeLine !=null) timeLine.stop();
         gameOverPanel.setVisible(false);
         eventListener.createNewGame();
         gamePanel.requestFocus();
-        timeLine.play();
+        if (timeLine !=null) timeLine.play();
         isPause.setValue(Boolean.FALSE);
         isGameOver.setValue(Boolean.FALSE);
-    }
 
-    public void pauseGame(ActionEvent actionEvent) {
-        gamePanel.requestFocus();
+        //reset stats
+            linesCleared = 0;
+            updateStatsUI();
     }
 }

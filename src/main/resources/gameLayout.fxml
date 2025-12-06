@@ -4,6 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import java.net.URL?>
 <?import javafx.scene.text.Text?>
+<?import javafx.scene.control.Label?>
 
 <StackPane fx:controller="com.comp2042.controller.GuiController"
            xmlns:fx="http:javafx.com/fxml">
@@ -11,29 +12,43 @@
         <URL value="@window_style.css"/>
     </stylesheets>
 
-    <Pane fx:id="gameRoot" visible="false">
-        <BorderPane styleClass="gameBoard">
-            <center>
-                <GridPane fx:id="gamePanel" hgap="1" vgap="1" layoutY="30" layoutX="40"/>
-            </center>
-        </BorderPane>
+    <HBox fx:id="gameRoot" visible="false" spacing="20" alignment="CENTER" style="-fx-background-color: #2b2b2b;">
+        <Pane>
+            <BorderPane styleClass="gameBoard">
+                <center>
+                    <GridPane fx:id="gamePanel" hgap="1" vgap="1"/>
+                </center>
+            </BorderPane>
 
-        <GridPane fx:id="brickPanel" vgap="1" hgap="1" layoutX="400" layoutY="50"/>
+            <Group fx:id="groupNotification" layoutX="50" layoutY="200">
+                <GameOverPanel fx:id="gameOverPanel"/>
+            </Group>
+        </Pane>
 
-        <Group fx:id="groupNotification" layoutX="14" layoutY="203">
-            <GameOverPanel fx:id="gameOverPanel"/>
-        </Group>
-    </Pane>
+        <VBox alignment="TOP_CENTER" spacing="20" style="'-fx-padding: 20;">
+            <Text fx:id="modeTitle" text="LUCID" style="-fx-fill: white; -fx-font-family: 'Courier New'; -fx-font-size: 30px;"/>
+            <VBox style="-fx-border-color: white; -fx-border-width: 2; -fx-padding: 10; -fx-mn-width:100; -fx-min-height: 100; -fx-alignment: center;">
+            <GridPane fx:id="brickPanel" hgap="1" vgap="1"/>
+            </VBox>
 
-    <VBox fx:id="mainMenu" alignment="CENTER" spacing="20" style="-fx-background-colour: white;">
-        <Text text="MoonTetris" style="-fx-font-size:40px; -fx-font-family: 'Courier New';"/>
+            <VBox spacing="10" style="-fx-padding: 10;">
+            <Label text="LEVEL: 1" style="-fx-text-fill: white; -fx-font-family: 'Courier New'; -fx-font-size: 18px;"/>
+            <Label fx:id="timeLabel" text="Time: 00:00" style="-fx-text-fill: white; -fx-font-family: 'Courier New'; -fx-font-size: 18px;"/>
+            <Label fx:id="linesLabel" text="Lines: 0" style="-fx-text-fill: white; -fx-font-family: 'Courier New'; -fx-font-size: 18px;"/>
+            </VBox>
+
+            <Button text="Quit" onAction="#backToMenu" style="-fx-background-color: transparent; -fx-text-fill: grey; -fx-border-color: grey;"/>
+        </VBox>
+    </HBox>
+
+    <VBox fx:id="mainMenu" alignment="CENTER" spacing="30" style="-fx-background-color:white;">
+        <Text text="MoonTetris" style="-fx-font-size: 50px; -fx-font-family: 'Courier New';"/>
 
         <Button text="Lucid" onAction="#startLucidGame"
-                style="-fx-font-size:20px; -fx-min-width: 200px; -fx-padding: 10;"/>
+                style="-fx-font-size: 20px; -fx-min-width: 200px; -fx-padding: 10; -fx-background-color: white; -fx-border-color: black;"/>
 
         <Button text="Whoosh!" onAction="#startWhooshGame"
-                style="-fx-font-size: 20px; -fx-min-width: 200px; -fx-padding: 10;"/>
-
+                style="-fx-font-size: 20px; -fx-min-width: 200px; -fx-padding: 10; -fx-background-color: white; -fx-border-color: black;"/>
     </VBox>
 
 </StackPane>
