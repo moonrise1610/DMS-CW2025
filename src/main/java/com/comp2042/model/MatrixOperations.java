@@ -15,11 +15,18 @@ public class MatrixOperations {
     }
 
     public static boolean intersect(final int[][] matrix, final int[][] brick, int x, int y) {
+        // i = row offset (vertical,Y), j = column offset (horizontal, X)
         for (int i = 0; i < brick.length; i++) {
             for (int j = 0; j < brick[i].length; j++) {
-                int targetX = x + i;
-                int targetY = y + j;
-                if (brick[j][i] != 0 && (checkOutOfBound(matrix, targetX, targetY) || matrix[targetY][targetX] != 0)) {
+                if (brick[i][j] == 0) continue;
+                int targetX = x + j;
+                int targetY = y + i;
+                //fixed collision of walls
+                if (targetX < 0 || targetY < 0 || targetY >= matrix.length || targetX >= matrix[targetY].length) {
+                    return true;
+                }
+                //collision with merged pieces
+                if (matrix[targetY][targetX] != 0) {
                     return true;
                 }
             }
@@ -28,11 +35,11 @@ public class MatrixOperations {
     }
 
     private static boolean checkOutOfBound(int[][] matrix, int targetX, int targetY) {
-        boolean returnValue = true;
-        if (targetX >= 0 && targetY < matrix.length && targetX < matrix[targetY].length) {
-            returnValue = false;
-        }
-        return returnValue;
+        if (targetX < 0) return true;
+        if (targetY < 0) return true;
+        if (targetY >= matrix.length) return true;
+        if (targetX >= matrix[targetY].length) return true;
+        return false;
     }
 
     public static int[][] copy(int[][] original) {
@@ -50,10 +57,14 @@ public class MatrixOperations {
         int[][] copy = copy(filledFields);
         for (int i = 0; i < brick.length; i++) {
             for (int j = 0; j < brick[i].length; j++) {
-                int targetX = x + i;
-                int targetY = y + j;
-                if (brick[j][i] != 0) {
-                    copy[targetY][targetX] = brick[j][i];
+
+                //only check the occupied parts of the falling brick
+                if (brick[i][j] !=0) {
+                    int targetX = x + j;
+                    int targetY = y + i;
+
+                    //merge brick color into matrix at target position [y][x]
+                    copy[targetY][targetX] = brick[i][j];
                 }
             }
         }

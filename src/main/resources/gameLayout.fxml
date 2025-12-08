@@ -7,16 +7,20 @@
 <?import javafx.scene.control.Label?>
 
 <StackPane fx:controller="com.comp2042.controller.GuiController"
-           xmlns:fx="http:javafx.com/fxml">
+           xmlns:fx="http:javafx.com/fxml"
+           style="-fx-background-color: #2b2b2b;">
     <stylesheets>
         <URL value="@window_style.css"/>
     </stylesheets>
 
-    <HBox fx:id="gameRoot" visible="false" spacing="20" alignment="CENTER" style="-fx-background-color: #2b2b2b;">
+    <HBox fx:id="gameRoot" visible="false" spacing="40" alignment="CENTER">
         <Pane>
-            <BorderPane styleClass="gameBoard">
+            <BorderPane styleClass="gameBoard" style="-fx-border-color: white; -fx-border-width:2px; -fx-background-color: black;">
                 <center>
-                    <GridPane fx:id="gamePanel" hgap="1" vgap="1"/>
+                    <Group>
+                        <GridPane fx:id="gamePanel" hgap="0" vgap="0"/>
+                        <GridPane fx:id="brickPanel" hgap="0" vgap="0"/>
+                    </Group>
                 </center>
             </BorderPane>
 
@@ -25,19 +29,19 @@
             </Group>
         </Pane>
 
-        <VBox alignment="TOP_CENTER" spacing="20" style="'-fx-padding: 20;">
+        <VBox alignment="TOP_CENTER" spacing="30">
             <Text fx:id="modeTitle" text="LUCID" style="-fx-fill: white; -fx-font-family: 'Courier New'; -fx-font-size: 30px;"/>
-            <VBox style="-fx-border-color: white; -fx-border-width: 2; -fx-padding: 10; -fx-mn-width:100; -fx-min-height: 100; -fx-alignment: center;">
-            <GridPane fx:id="brickPanel" hgap="1" vgap="1"/>
+            <VBox alignment="CENTER" style="-fx-border-color: white; -fx-border-width: 2; -fx-min-width:120; -fx-min-height: 120;">
+                <GridPane fx:id="nextPiecePanel" hgap="1" vgap="1" alignment="CENTER"/>
             </VBox>
 
-            <VBox spacing="10" style="-fx-padding: 10;">
-            <Label text="LEVEL: 1" style="-fx-text-fill: white; -fx-font-family: 'Courier New'; -fx-font-size: 18px;"/>
-            <Label fx:id="timeLabel" text="Time: 00:00" style="-fx-text-fill: white; -fx-font-family: 'Courier New'; -fx-font-size: 18px;"/>
-            <Label fx:id="linesLabel" text="Lines: 0" style="-fx-text-fill: white; -fx-font-family: 'Courier New'; -fx-font-size: 18px;"/>
+            <VBox spacing="10" style="CENTRE_LEFT">
+                <Label text="LEVEL: 1" style="-fx-text-fill: white; -fx-font-family: 'Courier New'; -fx-font-size: 18px;"/>
+                <Label fx:id="timeLabel" text="Time: 00:00" style="-fx-text-fill: white; -fx-font-family: 'Courier New'; -fx-font-size: 18px;"/>
+                <Label fx:id="linesLabel" text="Lines: 0" style="-fx-text-fill: white; -fx-font-family: 'Courier New'; -fx-font-size: 18px;"/>
             </VBox>
 
-            <Button text="Quit" onAction="#backToMenu" style="-fx-background-color: transparent; -fx-text-fill: grey; -fx-border-color: grey;"/>
+            <Button text="Quit" onAction="#backToMenu" style="-fx-background-color: transparent; -fx-text-fill: grey; -fx-border-color: grey; -fx-font-size: 14px;"/>
         </VBox>
     </HBox>
 

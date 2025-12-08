@@ -23,7 +23,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
@@ -46,6 +45,9 @@ public class GuiController implements Initializable {
     private GridPane brickPanel;
 
     @FXML
+    private GridPane nextPiecePanel; //added new placeholder
+
+    @FXML
     private GameOverPanel gameOverPanel;
 
     //menu
@@ -54,8 +56,6 @@ public class GuiController implements Initializable {
     @FXML private Text modeTitle;
     @FXML private Label timeLabel;
     @FXML private Label linesLabel;
-
-    private boolean isWhooshMode = false;
 
     private Rectangle[][] displayMatrix;
 
@@ -70,8 +70,10 @@ public class GuiController implements Initializable {
     private final BooleanProperty isGameOver = new SimpleBooleanProperty();
 
     //game mode setting
+    private boolean isWhooshMode = false;
     private int secondsElapsed = 0;
     private int linesCleared = 0;
+    private Rectangle[][] nextPieceMatrix;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -80,8 +82,13 @@ public class GuiController implements Initializable {
             Font.loadFont(fontUrl.toExternalForm(), 38);
         }
 
+        //keyboard
         gamePanel.setFocusTraversable(true);
         gamePanel.requestFocus();
+        gamePanel.setOnMouseClicked(event -> gamePanel.requestFocus());
+        //falling piece blocked mouse clicks
+        brickPanel.setMouseTransparent(true);
+
         //controls
         gamePanel.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
@@ -149,7 +156,6 @@ public class GuiController implements Initializable {
     private void setupGame(boolean isWhoosh, String title) {
         isWhooshMode = isWhoosh;
         modeTitle.setText(title);
-
         //whoosh 120 secs
         //lucid 0 secs
         secondsElapsed = isWhooshMode ? 120 : 0;
@@ -164,6 +170,7 @@ public class GuiController implements Initializable {
 
     //game loop and logic
     public void initGameView(int[][] boardMatrix, ViewData brick) {
+
         displayMatrix = new Rectangle[boardMatrix.length][boardMatrix[0].length];
         for (int i = 2; i < boardMatrix.length; i++) {
             for (int j = 0; j < boardMatrix[i].length; j++) {
@@ -173,32 +180,33 @@ public class GuiController implements Initializable {
                 gamePanel.add(rectangle, j, i - 2);
             }
         }
-        rectangles = new Rectangle[brick.getBrickData().length][brick.getBrickData()[0].length];
-        for (int i = 0; i < brick.getBrickData().length; i++) {
-            for (int j = 0; j < brick.getBrickData()[i].length; j++) {
-                Rectangle rectangle = new Rectangle(BRICK_SIZE, BRICK_SIZE);
-                rectangle.setFill(getFillColor(brick.getBrickData()[i][j]));
-                rectangles[i][j] = rectangle;
-                brickPanel.add(rectangle, j, i);
+
+        //fixing glitch
+        refreshBrick(brick);
+
+        //next piece panel
+        nextPiecePanel.getChildren().clear();
+        nextPieceMatrix = new Rectangle[4][4];
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                Rectangle rectangle = new Rectangle(BRICK_SIZE + 1 * 0.7, BRICK_SIZE + 1 * 0.7);
+                rectangle.setFill(Color.TRANSPARENT);
+                nextPieceMatrix[i][j] = rectangle;
+                nextPiecePanel.add(rectangle, j, i);
             }
         }
-        brickPanel.setLayoutX(0);
-        brickPanel.setLayoutY(0);
-
         if (timeLine != null) timeLine.stop();
 
         //gravity + timer
         timeLine = new Timeline(new KeyFrame(
-                Duration.millis(500),
+                Duration.millis(600),
                 ae -> {
                     moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD));
 
                     //clock logic
                     if (isWhooshMode) {
                         secondsElapsed--; //whoosh (countdown)
-                        if (secondsElapsed <= 0) {
-                            gameOver();
-                        }
+                        if (secondsElapsed <= 0) gameOver();
                     } else {
                         secondsElapsed++; //lucid (stopwatch)
                     }
@@ -209,7 +217,6 @@ public class GuiController implements Initializable {
         timeLine.play();
     }
         private void updateStatsUI() {
-
             //format time
             int min = Math.abs(secondsElapsed) / 60;
             int sec = Math.abs(secondsElapsed) % 60;
@@ -223,47 +230,62 @@ public class GuiController implements Initializable {
             }
         }
         private Paint getFillColor(int i) {
-        Paint returnPaint;
-        switch (i) {
-            case 0:
-                returnPaint = Color.TRANSPARENT;
-                break;
-            case 1:
-                returnPaint = Color.AQUA;
-                break;
-            case 2:
-                returnPaint = Color.BLUEVIOLET;
-                break;
-            case 3:
-                returnPaint = Color.DARKGREEN;
-                break;
-            case 4:
-                returnPaint = Color.YELLOW;
-                break;
-            case 5:
-                returnPaint = Color.RED;
-                break;
-            case 6:
-                returnPaint = Color.BEIGE;
-                break;
-            case 7:
-                returnPaint = Color.BURLYWOOD;
-                break;
-            default:
-                returnPaint = Color.WHITE;
-                break;
+            Paint returnPaint;
+            switch (i) {
+                case 0:
+                    returnPaint = Color.TRANSPARENT;
+                    break;
+                case 1:
+                    returnPaint = Color.AQUA;
+                    break;
+                case 2:
+                    returnPaint = Color.BLUEVIOLET;
+                    break;
+                case 3:
+                    returnPaint = Color.DARKGREEN;
+                    break;
+                case 4:
+                    returnPaint = Color.YELLOW;
+                    break;
+                case 5:
+                    returnPaint = Color.RED;
+                    break;
+                case 6:
+                    returnPaint = Color.BEIGE;
+                    break;
+                case 7:
+                    returnPaint = Color.BURLYWOOD;
+                    break;
+                default:
+                    returnPaint = Color.WHITE;
+                    break;
+            }
+            return returnPaint;
         }
-        return returnPaint;
-    }
+
 
 
     private void refreshBrick(ViewData brick) {
         if (isPause.getValue() == Boolean.FALSE) {
-            brickPanel.setLayoutX(gamePanel.getLayoutX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
-            brickPanel.setLayoutY(-42 + gamePanel.getLayoutY() + brick.getyPosition() * brickPanel.getHgap() + brick.getyPosition() * BRICK_SIZE);
-            for (int i = 0; i < brick.getBrickData().length; i++) {
-                for (int j = 0; j < brick.getBrickData()[i].length; j++) {
-                    setRectangleData(brick.getBrickData()[i][j], rectangles[i][j]);
+
+            brickPanel.setLayoutX(brick.getxPosition() * BRICK_SIZE);
+            brickPanel.setLayoutY((brick.getyPosition() - 2) * BRICK_SIZE);
+
+            //clear old piece shape
+            brickPanel.getChildren().clear();
+
+            //re-initialize falling piece view based on ViewData shape
+            int rows = brick.getBrickData().length;
+            int cols = brick.getBrickData()[0].length;
+
+            rectangles = new Rectangle[rows][cols]; //Re-size the rectangles array
+
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    Rectangle rectangle = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                    setRectangleData(brick.getBrickData()[i][j], rectangle); //set color
+                    rectangles[i][j] = rectangle;
+                    brickPanel.add(rectangle, j, i); //add rectangle to the pane
                 }
             }
         }
@@ -322,7 +344,27 @@ public class GuiController implements Initializable {
         isGameOver.setValue(Boolean.FALSE);
 
         //reset stats
-            linesCleared = 0;
-            updateStatsUI();
+        linesCleared = 0;
+        updateStatsUI();
+    }
+
+    //next piece in side box
+    public void refreshNextPiece(int[][] nextPieceData) {
+        if (nextPieceData == null || nextPieceMatrix == null) return;
+
+        //clear 4x4
+        for (int i =0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                nextPieceMatrix[i][j].setFill(Color.TRANSPARENT);
+            }
+        }
+        //draw piece itself
+        for (int i = 0; i < nextPieceData.length; i++) {
+            for (int j = 0; j < nextPieceData[i].length; j++) {
+                if (i < 4 && j < 4) {
+                    setRectangleData(nextPieceData[i][j], nextPieceMatrix[i][j]);
+                }
+            }
+        }
     }
 }

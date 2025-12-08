@@ -3,8 +3,8 @@ package com.comp2042.controller;
 import com.comp2042.model.*;
 
 public class GameController implements InputEventListener {
-
-    private final Board board = new SimpleBoard(25, 10);
+    //changed size
+    private final Board board = new SimpleBoard(10, 20);
 
     private final GuiController viewGuiController;
 
@@ -26,12 +26,15 @@ public class GameController implements InputEventListener {
             if (clearRow.getLinesRemoved() > 0) {
                 board.getScore().add(clearRow.getScoreBonus());
             }
+            //create new falling piece
             if (board.createNewBrick()) {
                 viewGuiController.gameOver();
             }
 
-            viewGuiController.refreshGameBackground(board.getBoardMatrix());
+            //update next piece display
+            viewGuiController.refreshNextPiece(((SimpleBoard) board).getNextBrickData());
 
+            viewGuiController.refreshGameBackground(board.getBoardMatrix());
         } else {
             if (event.getEventSource() == EventSource.USER) {
                 board.getScore().add(1);
